@@ -66,7 +66,7 @@
     <!-- Boîte de dialogue de confirmation de suppression -->
     <div
       v-if="depenseASupprimer"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      class="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in flex items-center justify-center p-4 z-50"
       @click.self="annulerSuppression"
     >
       <div class="bg-white rounded-lg p-6 max-w-sm w-full">

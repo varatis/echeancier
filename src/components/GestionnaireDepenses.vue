@@ -81,10 +81,10 @@ export default {
         const montant = parseFloat(depense.montant)
         if (depense.utilisateurId === 1) {
           // Yoann
-          totalYoann += montant
+          totalElodie += montant
         } else {
           // Elodie
-          totalElodie += montant
+          totalYoann += montant
         }
       })
 
