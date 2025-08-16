@@ -1,11 +1,42 @@
-<script setup lang="ts"></script>
+<script>
+import ExpenseTracker from './components/ExpenseTracker.vue'
+
+export default {
+  name: 'App',
+  components: {
+    ExpenseTracker
+  }
+}
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <div id="app" class="min-h-screen bg-gray-50">
+    <ExpenseTracker />
+  </div>
 </template>
 
-<style scoped></style>
+
+
+<style>
+@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+
+#app {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Styles pour mobile */
+@media (max-width: 768px) {
+  input, select {
+    font-size: 16px; /* Évite le zoom automatique sur iOS */
+  }
+}
+
+/* Animation pour les transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+</style>
