@@ -1,34 +1,38 @@
 <template>
-  <div class="max-w-md mx-auto p-8 mt-10 bg-white rounded-lg shadow-xl">
-    <div class="flex justify-between mb-6">
-      <button
-        @click="mode = 'connexion'"
-        :class="[
-          'w-1/2 py-2 text-lg font-bold rounded-l-lg',
-          mode === 'connexion' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800',
-        ]"
-      >
-        Se connecter
-      </button>
-      <button
-        @click="mode = 'inscription'"
-        :class="[
-          'w-1/2 py-2 text-lg font-bold rounded-r-lg',
-          mode === 'inscription' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800',
-        ]"
-      >
-        S'inscrire
-      </button>
-    </div>
+  <div>
+    <div class="w-full">
+      <div class="flex rounded-full bg-gray-100 p-1 mb-6">
+        <button
+          @click="mode = 'connexion'"
+          :class="[
+            'w-1/2 py-2 text-sm font-semibold rounded-full transition-colors duration-200',
+            mode === 'connexion'
+              ? 'bg-white shadow text-gray-900'
+              : 'text-gray-500 hover:text-gray-900',
+          ]"
+        >
+          Se connecter
+        </button>
+        <button
+          @click="mode = 'inscription'"
+          :class="[
+            'w-1/2 py-2 text-sm font-semibold rounded-full transition-colors duration-200',
+            mode === 'inscription'
+              ? 'bg-white shadow text-gray-900'
+              : 'text-gray-500 hover:text-gray-900',
+          ]"
+        >
+          S'inscrire
+        </button>
+      </div>
 
-    <div v-if="mode === 'inscription'">
-      <h2 class="text-2xl font-bold mb-4 text-center">Créer un compte</h2>
-      <FormulaireInscription />
-    </div>
+      <div v-if="mode === 'inscription'">
+        <FormulaireInscription />
+      </div>
 
-    <div v-if="mode === 'connexion'">
-      <h2 class="text-2xl font-bold mb-4 text-center">Se connecter</h2>
-      <FormulaireConnexion />
+      <div v-if="mode === 'connexion'">
+        <FormulaireConnexion />
+      </div>
     </div>
   </div>
 </template>

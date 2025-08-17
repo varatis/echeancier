@@ -6,9 +6,10 @@
 
         <button
           @click="afficherModalAuth = true"
-          class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-full text-sm hover:bg-blue-700 transition duration-300"
+          aria-label="Connexion/Inscription"
+          class="p-2 text-gray-500 hover:text-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full"
         >
-          Connexion / Inscription
+          <User class="w-6 h-6" />
         </button>
       </div>
     </div>
@@ -47,7 +48,7 @@
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus, User } from 'lucide-vue-next'
 import CartesoldeEquilibre from './CartesoldeEquilibre.vue'
 import StatistiquesUtilisateurs from './StatistiquesUtilisateurs.vue'
 import FormulaireDepense from './FormulaireDepense.vue'
@@ -57,12 +58,13 @@ import ModalAuthentification from './ModalAuthentification.vue' // Importez la n
 export default {
   name: 'GestionnaireDepenses',
   components: {
-    ModalAuthentification, // Ajoutez la modale aux composants
+    ModalAuthentification,
     CartesoldeEquilibre,
     StatistiquesUtilisateurs,
     FormulaireDepense,
     ListeDepenses,
     Plus,
+    User,
   },
   setup() {
     const utilisateurs = ref([
