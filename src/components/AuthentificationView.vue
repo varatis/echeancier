@@ -27,20 +27,46 @@
       </div>
 
       <div v-if="mode === 'inscription'">
-        <FormulaireInscription />
+        <FormulaireInscription @inscription-reussie="gererInscriptionReussie" />
       </div>
 
       <div v-if="mode === 'connexion'">
-        <FormulaireConnexion />
+        <FormulaireConnexion @connexion-reussie="gererConnexionReussie" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, defineEmits } from 'vue'
 import FormulaireInscription from './FormulaireInscription.vue'
 import FormulaireConnexion from './FormulaireConnexion.vue'
 
-const mode = ref('connexion') // 'connexion' ou 'inscription'
+// Define the events that will be emitted
+const emit = defineEmits(['connexion-reussie'])
+
+// Reactive state to toggle between forms
+const mode = ref('connexion') // 'connexion' or 'inscription'
+
+// Handles successful login after the child component emits the event
+const gererConnexionReussie = (donneesUtilisateur) => {
+  // Log the received user data for debugging
+  console.log('Données utilisateur reçues:', donneesUtilisateur)
+
+  // Store user data in localStorage
+  localStorage.setItem('userData', JSON.stringify(donneesUtilisateur))
+
+  console.log("✅ Token et userData stockés, émission de l'événement connexion-reussie")
+  // Emit the event to the parent component (ModalAuthentification)
+  emit('connexion-reussie', donneesUtilisateur)
+}
+
+// Handles successful registration
+const gererInscriptionReussie = () => {
+  mode.value = 'connexion' // After registration, switch to the login screen
+}
 </script>
+
+<style scoped>
+/* Your existing styles */
+</style>

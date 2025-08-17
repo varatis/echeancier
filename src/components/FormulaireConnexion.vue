@@ -28,18 +28,29 @@
 
       <button
         type="submit"
-        class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        :disabled="chargement"
+        class="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
       >
-        Se connecter
+        <span v-if="chargement">Connexion en cours...</span>
+        <span v-else>Se connecter</span>
       </button>
     </form>
-    <p v-if="message" class="text-center mt-4 text-sm font-medium text-red-500">{{ message }}</p>
+    <p
+      v-if="message"
+      class="text-center mt-4 text-sm font-medium"
+      :class="message.includes('succès') ? 'text-green-500' : 'text-red-500'"
+    >
+      {{ message }}
+    </p>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue'
-import api from '../services/api'
+import axios from 'axios'
+
+// Define the events that will be emitted
+const emit = defineEmits(['connexion-reussie'])
 
 const credentials = reactive({
   email: '',
@@ -47,22 +58,35 @@ const credentials = reactive({
 })
 
 const message = ref('')
+const chargement = ref(false)
 
 const gererConnexion = async () => {
+  chargement.value = true
+  message.value = ''
   try {
-    const reponse = await api.post('/utilisateurs/connexion', credentials)
+    const reponse = await axios.post(
+      'http://localhost:8080/api/utilisateurs/connexion',
+      credentials,
+    )
     const token = reponse.data.token
+    const user = reponse.data.user
+
+    // Stocker les données dans localStorage
     localStorage.setItem('authToken', token)
-    message.value = 'Connexion réussie ! Token stocké.'
+    localStorage.setItem('userData', JSON.stringify(user))
+
+    message.value = 'Connexion réussie !'
     console.log('Connexion réussie ! Token stocké.', token)
 
-    // Gérer la redirection vers une page sécurisée
-    // window.location.href = '/dashboard';
+    // Emet l'événement de connexion réussie avec les données de l'utilisateur
+    emit('connexion-reussie', { token, user })
   } catch (erreur) {
     message.value =
       'Erreur de connexion : ' +
       (erreur.response?.data?.message || 'Email ou mot de passe incorrect.')
     console.error('Erreur lors de la connexion', erreur)
+  } finally {
+    chargement.value = false
   }
 }
 </script>
@@ -70,34 +94,4 @@ const gererConnexion = async () => {
 <style scoped>
 /* Utiliser le même style que FormulaireInscription.vue pour les classes .conteneur-inscription, .groupe-champ, etc. */
 /* Renommer les classes spécifiques pour éviter les conflits si nécessaire */
-.conteneur-connexion {
-  max-width: 400px;
-  margin: 2rem auto;
-  padding: 2rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  font-family: Arial, sans-serif;
-}
-
-.bouton-connexion {
-  width: 100%;
-  padding: 0.8rem;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.bouton-connexion:hover {
-  background-color: #218838;
-}
-
-.message {
-  text-align: center;
-  margin-top: 1rem;
-  color: red;
-}
 </style>
