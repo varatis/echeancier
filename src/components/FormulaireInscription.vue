@@ -7,7 +7,7 @@
         <input
           id="nom"
           type="text"
-          v-model="credentials.nom"
+          v-model="credentials.nomUtilisateur"
           required
           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
         />
@@ -61,7 +61,7 @@ import { ref } from 'vue'
 import api from '@/services/api'
 
 const credentials = ref({
-  nom: '',
+  nomUtilisateur: '',
   email: '',
   motDePasse: '',
 })
@@ -72,7 +72,7 @@ const gererInscription = async () => {
   try {
     const reponse = await api.post('/utilisateurs/inscription', credentials.value)
     message.value = 'Inscription réussie ! Vous pouvez maintenant vous connecter.'
-    credentials.value.nom = ''
+    credentials.value.nomUtilisateur = ''
     credentials.value.email = ''
     credentials.value.motDePasse = ''
   } catch (erreur) {
