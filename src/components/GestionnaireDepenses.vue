@@ -67,53 +67,63 @@
         </div>
       </div>
 
-      <div class="max-w-md mx-auto px-4">
-        <CarteSoldeEquilibre :solde="solde" />
-        <StatistiquesUtilisateurs :utilisateurs="utilisateurs" :depenses="depenses" />
+      <!-- Contenu principal -->
+      <div class="max-w-md mx-auto px-4 py-8">
+        <!-- Carte du solde -->
+        <CarteSoldeEquilibre :solde="solde" :utilisateur-connecte="utilisateurConnecte" />
+
+        <!-- Bouton pour ajouter une dépense -->
+        <div class="flex items-center justify-between mt-6">
+          <h2 class="text-xl font-bold text-gray-900">Vos Dépenses</h2>
+          <button
+            v-if="!afficherFormulaire"
+            @click="basculerFormulaire"
+            aria-label="Ajouter une nouvelle dépense"
+            class="p-2 bg-blue-500 text-white rounded-full shadow-lg hover:bg-blue-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-6 w-6 rotate-45"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Formulaire d'ajout de dépense -->
         <FormulaireDepense
           v-show="afficherFormulaire"
           :utilisateurs="utilisateurs"
           @ajouter-depense="ajouterDepense"
           @annuler="basculerFormulaire"
         />
+
+        <!-- Statistiques par utilisateur -->
+        <StatistiquesUtilisateurs :utilisateurs="utilisateurs" :depenses="depenses" />
+
+        <!-- Liste des dépenses -->
         <ListeDepenses
-          :depenses="depenses"
           :utilisateurs="utilisateurs"
+          :depenses="depenses"
           @supprimer-depense="supprimerDepense"
         />
       </div>
-
-      <!-- Bouton flottant pour ajouter une dépense -->
-      <button
-        v-if="utilisateurConnecte"
-        @click="basculerFormulaire"
-        class="fixed bottom-6 right-6 md:right-[calc(50vw-220px)] w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-        :class="{ 'rotate-45': afficherFormulaire }"
-        aria-label="Ajouter une dépense"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-8 w-8 transition-transform duration-200"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 4v16m8-8H4"
-          />
-        </svg>
-      </button>
-
-      <!-- Modal d'authentification -->
-      <ModalAuthentification
-        v-if="afficherModalAuth"
-        @fermer="afficherModalAuth = false"
-        @connexion-reussie="gererConnexionReussie"
-      />
     </div>
+
+    <!-- Modale d'authentification -->
+    <ModalAuthentification
+      :afficher="afficherModalAuth"
+      @fermer="afficherModalAuth = false"
+      @connexion-reussie="gererConnexionReussie"
+    />
   </div>
 </template>
 
@@ -136,10 +146,7 @@ export default {
   },
   setup() {
     // État réactif
-    const utilisateurs = ref([
-      { id: 1, nom: 'Alice' },
-      { id: 2, nom: 'Bob' },
-    ])
+    const utilisateurs = ref([])
     const depenses = ref([])
     const afficherFormulaire = ref(false)
     const afficherModalAuth = ref(false)
@@ -158,7 +165,6 @@ export default {
     // Méthodes
     const ajouterDepense = (nouvelleDepense) => {
       nouvelleDepense.id = Date.now()
-      nouvelleDepense.payePar = nouvelleDepense.utilisateurId
       depenses.value.unshift(nouvelleDepense)
       afficherFormulaire.value = false
       sauvegarderDepenses()
@@ -175,7 +181,6 @@ export default {
 
     const gererConnexionReussie = (donneesUtilisateur) => {
       console.log('✅ GestionnaireDepenses: Connexion réussie, réception des données utilisateur')
-      // S'assurer que les données utilisateur sont bien définies
       if (donneesUtilisateur) {
         utilisateurConnecte.value = donneesUtilisateur
         afficherModalAuth.value = false
@@ -219,10 +224,41 @@ export default {
       }
     }
 
-    const verifierAuthentification = () => {
+    const chargerUtilisateurs = async () => {
+      const authToken =
+        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ5b2FubnRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU0NjYxNzcsImV4cCI6MTc1NjA3MDk3N30.NwZo8-MiBYnfD6j7UI-uvElw6yPxUvUoB7LQmIqP5Qot5ORyaRL_-Yzj9cAAa_VNMUPUprl1I28RJ5TOlB2d2A'
+      try {
+        const response = await fetch('http://localhost:8080/api/utilisateurs', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`)
+        }
+
+        const data = await response.json()
+        utilisateurs.value = data.map((user) => ({
+          id: user.id,
+          nom: user.nomUtilisateur,
+          email: user.email,
+          couleur: 'bg-gray-500', // Couleur par défaut
+        }))
+
+        console.log('Utilisateurs chargés depuis la base de données:', utilisateurs.value)
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs:', error)
+      }
+    }
+
+    // Initialisation
+    onMounted(async () => {
+      await chargerUtilisateurs()
       try {
         const userData = localStorage.getItem('userData')
-        // S'assurer que userData n'est ni null, ni undefined, ni la chaîne "undefined"
         if (userData && userData !== 'undefined') {
           const parsedUser = JSON.parse(userData)
           utilisateurConnecte.value = parsedUser
@@ -235,20 +271,13 @@ export default {
       } finally {
         chargement.value = false
       }
-    }
-
-    // Initialisation
-    onMounted(() => {
-      verifierAuthentification()
     })
 
     // Surveillance des changements de l'utilisateur pour sauvegarder/charger les dépenses
     watch(utilisateurConnecte, (nouveau, ancien) => {
       if (nouveau && !ancien) {
-        // L'utilisateur vient de se connecter
         chargerDepenses()
       } else if (!nouveau && ancien) {
-        // L'utilisateur vient de se déconnecter
         depenses.value = []
       }
     })
@@ -276,9 +305,11 @@ export default {
   transform: rotate(45deg);
 }
 
-@media (hover: none) and (pointer: coarse) {
-  button:focus {
-    outline: none !important;
+@media (hover: hover) and (pointer: fine) {
+  .hover\:shadow-md:hover {
+    box-shadow:
+      0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
   }
 }
 </style>
