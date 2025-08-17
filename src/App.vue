@@ -6,10 +6,12 @@
 
 <script>
 import GestionnaireDepenses from './components/GestionnaireDepenses.vue'
+import FormulaireInscription from '@/components/FormulaireInscription.vue'
 
 export default {
   name: 'App',
   components: {
+    FormulaireInscription,
     GestionnaireDepenses,
   },
 }
