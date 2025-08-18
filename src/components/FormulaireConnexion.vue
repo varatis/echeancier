@@ -76,7 +76,6 @@ const gererConnexion = async () => {
     localStorage.setItem('userData', JSON.stringify(user))
 
     message.value = 'Connexion réussie !'
-    console.log('Connexion réussie ! Token stocké.', token)
 
     // Emet l'événement de connexion réussie avec les données de l'utilisateur
     emit('connexion-reussie', { token, user })
@@ -84,7 +83,6 @@ const gererConnexion = async () => {
     message.value =
       'Erreur de connexion : ' +
       (erreur.response?.data?.message || 'Email ou mot de passe incorrect.')
-    console.error('Erreur lors de la connexion', erreur)
   } finally {
     chargement.value = false
   }

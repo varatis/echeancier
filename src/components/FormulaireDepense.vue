@@ -109,13 +109,7 @@ export default {
     })
 
     // Watcher pour débugger les changements
-    watch(
-      formulaire,
-      (newVal) => {
-        console.log('Formulaire modifié:', newVal)
-      },
-      { deep: true },
-    )
+    watch(formulaire, (newVal) => {}, { deep: true })
 
     const formulaireValide = computed(() => {
       const valide =
@@ -125,7 +119,6 @@ export default {
         formulaire.value.categorie &&
         parseFloat(formulaire.value.montant) > 0 &&
         formulaire.value.utilisateurId
-      console.log('Formulaire valide:', valide)
       return valide
     })
 
@@ -140,11 +133,7 @@ export default {
     }
 
     const gererSoumission = () => {
-      console.log('=== SOUMISSION DU FORMULAIRE ===')
-      console.log('Données du formulaire avant validation:', formulaire.value)
-
       if (!formulaireValide.value) {
-        console.error('Formulaire non valide')
         return
       }
 
@@ -155,15 +144,6 @@ export default {
         dateDepense: formulaire.value.dateDepense,
         categorie: formulaire.value.categorie.trim(),
       }
-
-      console.log('Données à envoyer:', donneesAEnvoyer)
-      console.log('Types des données:', {
-        utilisateurId: typeof donneesAEnvoyer.utilisateurId,
-        montant: typeof donneesAEnvoyer.montant,
-        description: typeof donneesAEnvoyer.description,
-        dateDepense: typeof donneesAEnvoyer.dateDepense,
-        categorie: typeof donneesAEnvoyer.categorie,
-      })
 
       emit('ajouter-depense', donneesAEnvoyer)
       reinitialiserFormulaire()

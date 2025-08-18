@@ -89,7 +89,6 @@ const gererInscription = async () => {
     } else {
       message.value = 'Erreur de configuration de la requête.'
     }
-    console.error("Erreur lors de l'inscription", erreur)
   }
 }
 </script>

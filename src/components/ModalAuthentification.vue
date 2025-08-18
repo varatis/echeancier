@@ -182,7 +182,6 @@ export default {
         }
       } catch (e) {
         erreur.value = e.message
-        console.error("Erreur d'authentification:", e)
       } finally {
         chargementAuth.value = false
       }

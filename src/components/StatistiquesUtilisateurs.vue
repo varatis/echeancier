@@ -43,7 +43,6 @@ export default {
     }
 
     const obtenirTotalParUtilisateur = (utilisateurId) => {
-      console.log('HEREEEEE ', props.depenses)
       return props.depenses
         .filter((depense) => depense.utilisateurId === utilisateurId)
         .reduce((total, depense) => total + parseFloat(depense.montant), 0)

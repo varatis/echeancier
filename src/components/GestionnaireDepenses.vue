@@ -202,16 +202,6 @@ export default {
     // Méthodes
     const ajouterDepense = async (nouvelleDepense) => {
       try {
-        console.log('=== DÉBUT AJOUT DÉPENSE ===')
-        console.log('Données reçues du formulaire:', nouvelleDepense)
-        console.log('Types des données reçues:', {
-          utilisateurId: typeof nouvelleDepense.utilisateurId,
-          montant: typeof nouvelleDepense.montant,
-          description: typeof nouvelleDepense.description,
-          dateDepense: typeof nouvelleDepense.dateDepense,
-          categorie: typeof nouvelleDepense.categorie,
-        })
-
         // Validation côté client
         if (!nouvelleDepense.categorie || nouvelleDepense.categorie.trim() === '') {
           throw new Error('La catégorie est obligatoire')
@@ -229,11 +219,7 @@ export default {
           categorie: nouvelleDepense.categorie.trim(),
         }
 
-        console.log("Données préparées pour l'API:", donneesAPI)
-        console.log('JSON à envoyer:', JSON.stringify(donneesAPI))
-
         const url = `${API_URL}/depenses/utilisateur/${nouvelleDepense.utilisateurId}`
-        console.log('URL de la requête:', url)
 
         const response = await fetch(url, {
           method: 'POST',
@@ -245,16 +231,11 @@ export default {
           body: JSON.stringify(donneesAPI),
         })
 
-        console.log('Status HTTP:', response.status)
-        console.log('Headers de réponse:', [...response.headers.entries()])
-
         if (!response.ok) {
           const errorText = await response.text()
-          console.error("Réponse d'erreur du serveur:", errorText)
 
           try {
             const errorJson = JSON.parse(errorText)
-            console.error('Erreur parsée:', errorJson)
             throw new Error(errorJson.erreur || `Erreur HTTP: ${response.status}`)
           } catch (parseError) {
             throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`)
@@ -262,18 +243,11 @@ export default {
         }
 
         const data = await response.json()
-        console.log('Réponse du serveur (succès):', data)
 
         // Rafraîchir la liste des dépenses
         await chargerDepenses()
         afficherFormulaire.value = false
-
-        console.log('=== AJOUT DÉPENSE RÉUSSI ===')
       } catch (error) {
-        console.error('=== ERREUR AJOUT DÉPENSE ===')
-        console.error('Erreur complète:', error)
-        console.error('Stack trace:', error.stack)
-
         // Afficher l'erreur à l'utilisateur
         // (ajustez selon votre système de notification)
         alert(`Erreur lors de l'ajout de la dépense: ${error.message}`)
@@ -286,9 +260,6 @@ export default {
         !utilisateurConnecte.value.id ||
         !localStorage.getItem('authToken')
       ) {
-        console.error(
-          'Impossible de supprimer une dépense : utilisateur non connecté ou token manquant.',
-        )
         return
       }
 
@@ -306,13 +277,9 @@ export default {
           throw new Error(`Erreur HTTP: ${response.status}`)
         }
 
-        console.log('Dépense supprimée avec succès.')
         // Actualiser la liste des dépenses après la suppression
         await chargerDepenses()
-      } catch (error) {
-        console.error('Erreur lors de la suppression de la dépense:', error)
-        // Ici, vous pourriez afficher une notification à l'utilisateur
-      }
+      } catch (error) {}
     }
 
     const basculerFormulaire = () => {
@@ -320,14 +287,11 @@ export default {
     }
 
     const gererConnexionReussie = async (donneesUtilisateur) => {
-      console.log('✅ GestionnaireDepenses: Connexion réussie, réception des données utilisateur')
       if (donneesUtilisateur && donneesUtilisateur.id) {
         utilisateurConnecte.value = donneesUtilisateur
         afficherModalAuth.value = false
         await chargerUtilisateurs()
         await chargerDepenses()
-      } else {
-        console.error('Données utilisateur manquantes ou invalides.')
       }
     }
 
@@ -336,7 +300,6 @@ export default {
       localStorage.removeItem('userData')
       utilisateurConnecte.value = null
       depenses.value = []
-      console.log('🚪 Déconnexion réussie')
     }
 
     // Fonctions de persistance
@@ -344,9 +307,6 @@ export default {
 
     const chargerDepenses = async () => {
       if (!utilisateurConnecte.value || !localStorage.getItem('authToken')) {
-        console.warn(
-          'Impossible de charger les dépenses : utilisateur non connecté ou token manquant.',
-        )
         depenses.value = []
         return
       }
@@ -372,9 +332,7 @@ export default {
 
         const data = await response.json()
         depenses.value = data
-        console.log('📂 Toutes les dépenses chargées:', depenses.value.length, 'dépenses')
       } catch (erreur) {
-        console.warn('Impossible de charger les dépenses depuis le backend:', erreur)
         depenses.value = []
       }
     }
@@ -382,7 +340,6 @@ export default {
     const chargerUtilisateurs = async () => {
       const authToken = localStorage.getItem('authToken')
       if (!authToken) {
-        console.warn("Jeton d'authentification non trouvé. Impossible de charger les utilisateurs.")
         return
       }
       try {
@@ -405,11 +362,7 @@ export default {
           email: user.email,
           couleur: 'bg-gray-500', // Couleur par défaut
         }))
-
-        console.log('Utilisateurs chargés depuis la base de données:', utilisateurs.value)
-      } catch (error) {
-        console.error('Erreur lors du chargement des utilisateurs:', error)
-      }
+      } catch (error) {}
     }
 
     // Initialisation
@@ -421,18 +374,12 @@ export default {
           const parsedUser = JSON.parse(userData)
           if (parsedUser && parsedUser.id) {
             utilisateurConnecte.value = parsedUser
-            console.log(
-              '👤 Utilisateur déjà connecté:',
-              utilisateurConnecte.value.email || utilisateurConnecte.value.nom,
-            )
             await chargerDepenses()
           } else {
-            console.warn('Données utilisateur dans le localStorage non valides.')
             seDeconnecter()
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la vérification de l'authentification:", error)
         seDeconnecter()
       } finally {
         chargement.value = false

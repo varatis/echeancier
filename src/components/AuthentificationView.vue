@@ -50,13 +50,9 @@ const mode = ref('connexion') // 'connexion' or 'inscription'
 
 // Handles successful login after the child component emits the event
 const gererConnexionReussie = (donneesUtilisateur) => {
-  // Log the received user data for debugging
-  console.log('Données utilisateur reçues:', donneesUtilisateur)
-
   // Store user data in localStorage
   localStorage.setItem('userData', JSON.stringify(donneesUtilisateur))
 
-  console.log("✅ Token et userData stockés, émission de l'événement connexion-reussie")
   // Emit the event to the parent component (ModalAuthentification)
   emit('connexion-reussie', donneesUtilisateur)
 }
