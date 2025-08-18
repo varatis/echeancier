@@ -70,7 +70,11 @@
       <!-- Contenu principal -->
       <div class="max-w-md mx-auto px-4 py-8">
         <!-- Carte du solde -->
-        <CarteSoldeEquilibre :solde="solde" :utilisateur-connecte="utilisateurConnecte" />
+        <CarteSoldeEquilibre
+          :solde="solde"
+          :utilisateur-connecte="utilisateurConnecte"
+          :utilisateurs="utilisateurs"
+        />
 
         <!-- Bouton pour ajouter une dépense -->
         <div class="flex items-center justify-between mt-6">
@@ -155,11 +159,42 @@ export default {
 
     // Propriétés calculées
     const solde = computed(() => {
-      const totalDepenses = depenses.value.reduce(
-        (total, depense) => total + parseFloat(depense.montant),
+      if (!utilisateurConnecte.value || utilisateurs.value.length === 0) {
+        return 0
+      }
+
+      // Calcul du total des dépenses par utilisateur
+      const depensesParUtilisateur = {}
+
+      // Initialiser les soldes à 0
+      utilisateurs.value.forEach((user) => {
+        depensesParUtilisateur[user.id] = 0
+      })
+
+      // Additionner les dépenses de chaque utilisateur
+      depenses.value.forEach((depense) => {
+        if (depensesParUtilisateur.hasOwnProperty(depense.utilisateurId)) {
+          depensesParUtilisateur[depense.utilisateurId] += parseFloat(depense.montant)
+        }
+      })
+
+      // Calcul de la moyenne des dépenses
+      const totalDepenses = Object.values(depensesParUtilisateur).reduce(
+        (sum, montant) => sum + montant,
         0,
       )
-      return totalDepenses / utilisateurs.value.length
+      const moyenneParPersonne = totalDepenses / utilisateurs.value.length
+
+      // Pour un groupe de 2 : retourner la différence entre utilisateur connecté et moyenne
+      if (utilisateurs.value.length === 2) {
+        const depensesUtilisateurConnecte =
+          depensesParUtilisateur[utilisateurConnecte.value.id] || 0
+        return depensesUtilisateurConnecte - moyenneParPersonne
+      }
+
+      // Pour plus de 2 utilisateurs : retourner le solde de l'utilisateur connecté par rapport à la moyenne
+      const depensesUtilisateurConnecte = depensesParUtilisateur[utilisateurConnecte.value.id] || 0
+      return depensesUtilisateurConnecte - moyenneParPersonne
     })
 
     const API_URL = 'http://localhost:8080/api'
