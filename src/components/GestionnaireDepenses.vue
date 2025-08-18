@@ -258,18 +258,14 @@ export default {
       }
 
       const authToken = localStorage.getItem('authToken')
-      const utilisateurId = utilisateurConnecte.value.id
 
       try {
-        const response = await fetch(
-          `http://localhost:8080/api/depenses/${id}/utilisateur/${utilisateurId}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
+        const response = await fetch(`http://localhost:8080/api/depenses/${id}`, {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${authToken}`,
           },
-        )
+        })
 
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`)
