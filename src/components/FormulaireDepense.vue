@@ -52,17 +52,6 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1"> Catégorie </label>
-          <input
-            v-model="formulaire.categorie"
-            type="text"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            placeholder="Nourriture, Transport, etc."
-            required
-          />
-        </div>
-
-        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"> Description </label>
           <input
             v-model="formulaire.description"
@@ -123,7 +112,6 @@ export default {
       montant: '',
       description: '',
       dateDepense: new Date().toISOString().split('T')[0],
-      categorie: '',
     })
 
     // Watcher pour débugger les changements
@@ -134,7 +122,6 @@ export default {
         formulaire.value.montant &&
         formulaire.value.description &&
         formulaire.value.dateDepense &&
-        formulaire.value.categorie &&
         parseFloat(formulaire.value.montant) > 0 &&
         formulaire.value.utilisateurId
       return valide
@@ -146,7 +133,6 @@ export default {
         montant: '',
         description: '',
         dateDepense: new Date().toISOString().split('T')[0],
-        categorie: '',
       }
     }
 
@@ -160,7 +146,6 @@ export default {
         montant: parseFloat(formulaire.value.montant),
         description: formulaire.value.description.trim(),
         dateDepense: formulaire.value.dateDepense,
-        categorie: formulaire.value.categorie.trim(),
       }
 
       emit('ajouter-depense', donneesAEnvoyer)

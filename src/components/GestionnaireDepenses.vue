@@ -203,9 +203,6 @@ export default {
     const ajouterDepense = async (nouvelleDepense) => {
       try {
         // Validation côté client
-        if (!nouvelleDepense.categorie || nouvelleDepense.categorie.trim() === '') {
-          throw new Error('La catégorie est obligatoire')
-        }
 
         if (!nouvelleDepense.dateDepense) {
           throw new Error('La date est obligatoire')
@@ -215,8 +212,7 @@ export default {
         const donneesAPI = {
           montant: parseFloat(nouvelleDepense.montant),
           description: nouvelleDepense.description.trim(),
-          dateDepense: nouvelleDepense.dateDepense, // Format YYYY-MM-DD
-          categorie: nouvelleDepense.categorie.trim(),
+          dateDepense: nouvelleDepense.dateDepense,
         }
 
         const url = `${API_URL}/depenses/utilisateur/${nouvelleDepense.utilisateurId}`
