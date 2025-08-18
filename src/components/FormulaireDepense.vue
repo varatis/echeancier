@@ -24,12 +24,22 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"> Montant (€) </label>
           <input
-            v-model="formulaire.montant"
+            v-model.number="formulaire.montant"
             type="number"
             step="0.01"
             min="0"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            placeholder="0,00"
+            required
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1"> Catégorie </label>
+          <input
+            v-model="formulaire.categorie"
+            type="text"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            placeholder="Nourriture, Transport, etc."
             required
           />
         </div>
@@ -40,7 +50,7 @@
             v-model="formulaire.description"
             type="text"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            placeholder="Courses, Restaurant, Essence..."
+            placeholder="Détails de la dépense"
             required
           />
         </div>
@@ -48,41 +58,36 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1"> Date </label>
           <input
-            v-model="formulaire.date"
+            v-model="formulaire.dateDepense"
             type="date"
             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             required
           />
         </div>
 
-        <div class="flex gap-3 mt-6">
-          <button
-            type="button"
-            @click="$emit('annuler')"
-            class="flex-1 py-2 px-4 bg-gray-200 text-gray-800 rounded-lg font-medium hover:bg-gray-300 transition-colors duration-200"
-          >
-            Annuler
-          </button>
+        <div class="flex gap-4">
           <button
             type="submit"
             :disabled="!formulaireValide"
-            :class="[
-              'flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200',
-              formulaireValide
-                ? 'bg-blue-600 text-white hover:bg-blue-700 transform hover:scale-105'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed',
-            ]"
+            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            Ajouter
+            Ajouter la dépense
           </button>
         </div>
       </form>
+
+      <!-- Debug : Affichage des valeurs du formulaire -->
+      <div class="mt-4 p-4 bg-gray-100 rounded text-sm">
+        <h4>Debug - Valeurs du formulaire :</h4>
+        <pre>{{ JSON.stringify(formulaire, null, 2) }}</pre>
+        <p><strong>Formulaire valide :</strong> {{ formulaireValide }}</p>
+      </div>
     </div>
   </transition>
 </template>
 
 <script>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 export default {
   name: 'FormulaireDepense',
@@ -94,37 +99,73 @@ export default {
   },
   emits: ['ajouter-depense', 'annuler'],
   setup(props, { emit }) {
+    // Initialisez les valeurs du formulaire
     const formulaire = ref({
-      utilisateurId: 1,
+      utilisateurId: props.utilisateurs.length > 0 ? props.utilisateurs[0].id : null,
       montant: '',
       description: '',
-      date: new Date().toISOString().split('T')[0],
+      dateDepense: new Date().toISOString().split('T')[0],
+      categorie: '',
     })
 
+    // Watcher pour débugger les changements
+    watch(
+      formulaire,
+      (newVal) => {
+        console.log('Formulaire modifié:', newVal)
+      },
+      { deep: true },
+    )
+
     const formulaireValide = computed(() => {
-      return (
+      const valide =
         formulaire.value.montant &&
         formulaire.value.description &&
-        formulaire.value.date &&
-        parseFloat(formulaire.value.montant) > 0
-      )
+        formulaire.value.dateDepense &&
+        formulaire.value.categorie &&
+        parseFloat(formulaire.value.montant) > 0 &&
+        formulaire.value.utilisateurId
+      console.log('Formulaire valide:', valide)
+      return valide
     })
 
     const reinitialiserFormulaire = () => {
       formulaire.value = {
-        utilisateurId: 1,
+        utilisateurId: props.utilisateurs.length > 0 ? props.utilisateurs[0].id : null,
         montant: '',
         description: '',
-        date: new Date().toISOString().split('T')[0],
+        dateDepense: new Date().toISOString().split('T')[0],
+        categorie: '',
       }
     }
 
     const gererSoumission = () => {
+      console.log('=== SOUMISSION DU FORMULAIRE ===')
+      console.log('Données du formulaire avant validation:', formulaire.value)
+
       if (!formulaireValide.value) {
+        console.error('Formulaire non valide')
         return
       }
 
-      emit('ajouter-depense', { ...formulaire.value })
+      const donneesAEnvoyer = {
+        utilisateurId: formulaire.value.utilisateurId,
+        montant: parseFloat(formulaire.value.montant),
+        description: formulaire.value.description.trim(),
+        dateDepense: formulaire.value.dateDepense,
+        categorie: formulaire.value.categorie.trim(),
+      }
+
+      console.log('Données à envoyer:', donneesAEnvoyer)
+      console.log('Types des données:', {
+        utilisateurId: typeof donneesAEnvoyer.utilisateurId,
+        montant: typeof donneesAEnvoyer.montant,
+        description: typeof donneesAEnvoyer.description,
+        dateDepense: typeof donneesAEnvoyer.dateDepense,
+        categorie: typeof donneesAEnvoyer.categorie,
+      })
+
+      emit('ajouter-depense', donneesAEnvoyer)
       reinitialiserFormulaire()
     }
 
@@ -140,33 +181,11 @@ export default {
 <style scoped>
 .glissement-bas-enter-active,
 .glissement-bas-leave-active {
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
 }
-
-.glissement-bas-enter-from {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-
+.glissement-bas-enter-from,
 .glissement-bas-leave-to {
   opacity: 0;
-  transform: translateY(-20px);
-}
-
-/* Amélioration de l'UX sur mobile */
-input:focus,
-select:focus {
-  transform: scale(1.02);
-}
-
-@media (hover: none) and (pointer: coarse) {
-  input:focus,
-  select:focus {
-    transform: none;
-  }
-
-  button:hover {
-    transform: none !important;
-  }
+  transform: translateY(20px);
 }
 </style>

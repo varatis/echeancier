@@ -162,29 +162,139 @@ export default {
       return totalDepenses / utilisateurs.value.length
     })
 
+    const API_URL = 'http://localhost:8080/api'
+
     // Méthodes
-    const ajouterDepense = (nouvelleDepense) => {
-      nouvelleDepense.id = Date.now()
-      depenses.value.unshift(nouvelleDepense)
-      afficherFormulaire.value = false
-      sauvegarderDepenses()
+    const ajouterDepense = async (nouvelleDepense) => {
+      try {
+        console.log('=== DÉBUT AJOUT DÉPENSE ===')
+        console.log('Données reçues du formulaire:', nouvelleDepense)
+        console.log('Types des données reçues:', {
+          utilisateurId: typeof nouvelleDepense.utilisateurId,
+          montant: typeof nouvelleDepense.montant,
+          description: typeof nouvelleDepense.description,
+          dateDepense: typeof nouvelleDepense.dateDepense,
+          categorie: typeof nouvelleDepense.categorie,
+        })
+
+        // Validation côté client
+        if (!nouvelleDepense.categorie || nouvelleDepense.categorie.trim() === '') {
+          throw new Error('La catégorie est obligatoire')
+        }
+
+        if (!nouvelleDepense.dateDepense) {
+          throw new Error('La date est obligatoire')
+        }
+
+        // Préparation des données pour l'API
+        const donneesAPI = {
+          montant: parseFloat(nouvelleDepense.montant),
+          description: nouvelleDepense.description.trim(),
+          dateDepense: nouvelleDepense.dateDepense, // Format YYYY-MM-DD
+          categorie: nouvelleDepense.categorie.trim(),
+        }
+
+        console.log("Données préparées pour l'API:", donneesAPI)
+        console.log('JSON à envoyer:', JSON.stringify(donneesAPI))
+
+        const url = `${API_URL}/depenses/utilisateur/${nouvelleDepense.utilisateurId}`
+        console.log('URL de la requête:', url)
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(donneesAPI),
+        })
+
+        console.log('Status HTTP:', response.status)
+        console.log('Headers de réponse:', [...response.headers.entries()])
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          console.error("Réponse d'erreur du serveur:", errorText)
+
+          try {
+            const errorJson = JSON.parse(errorText)
+            console.error('Erreur parsée:', errorJson)
+            throw new Error(errorJson.erreur || `Erreur HTTP: ${response.status}`)
+          } catch (parseError) {
+            throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`)
+          }
+        }
+
+        const data = await response.json()
+        console.log('Réponse du serveur (succès):', data)
+
+        // Rafraîchir la liste des dépenses
+        await chargerDepenses()
+        afficherFormulaire.value = false
+
+        console.log('=== AJOUT DÉPENSE RÉUSSI ===')
+      } catch (error) {
+        console.error('=== ERREUR AJOUT DÉPENSE ===')
+        console.error('Erreur complète:', error)
+        console.error('Stack trace:', error.stack)
+
+        // Afficher l'erreur à l'utilisateur
+        // (ajustez selon votre système de notification)
+        alert(`Erreur lors de l'ajout de la dépense: ${error.message}`)
+      }
     }
 
-    const supprimerDepense = (id) => {
-      depenses.value = depenses.value.filter((depense) => depense.id !== id)
-      sauvegarderDepenses()
+    const supprimerDepense = async (id) => {
+      if (
+        !utilisateurConnecte.value ||
+        !utilisateurConnecte.value.id ||
+        !localStorage.getItem('authToken')
+      ) {
+        console.error(
+          'Impossible de supprimer une dépense : utilisateur non connecté ou token manquant.',
+        )
+        return
+      }
+
+      const authToken = localStorage.getItem('authToken')
+      const utilisateurId = utilisateurConnecte.value.id
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/depenses/${id}/utilisateur/${utilisateurId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`)
+        }
+
+        console.log('Dépense supprimée avec succès.')
+        // Actualiser la liste des dépenses après la suppression
+        await chargerDepenses()
+      } catch (error) {
+        console.error('Erreur lors de la suppression de la dépense:', error)
+        // Ici, vous pourriez afficher une notification à l'utilisateur
+      }
     }
 
     const basculerFormulaire = () => {
       afficherFormulaire.value = !afficherFormulaire.value
     }
 
-    const gererConnexionReussie = (donneesUtilisateur) => {
+    const gererConnexionReussie = async (donneesUtilisateur) => {
       console.log('✅ GestionnaireDepenses: Connexion réussie, réception des données utilisateur')
-      if (donneesUtilisateur) {
+      if (donneesUtilisateur && donneesUtilisateur.id) {
         utilisateurConnecte.value = donneesUtilisateur
         afficherModalAuth.value = false
-        chargerDepenses()
+        await chargerUtilisateurs()
+        await chargerDepenses()
       } else {
         console.error('Données utilisateur manquantes ou invalides.')
       }
@@ -199,34 +309,61 @@ export default {
     }
 
     // Fonctions de persistance
-    const sauvegarderDepenses = () => {
-      if (!utilisateurConnecte.value) return
-      try {
-        const cle = `depenses_${utilisateurConnecte.value.email}`
-        localStorage.setItem(cle, JSON.stringify(depenses.value))
-        console.log('💾 Dépenses sauvegardées pour:', cle)
-      } catch (erreur) {
-        console.warn('Impossible de sauvegarder les dépenses:', erreur)
+    const chargerDepenses = async () => {
+      if (
+        !utilisateurConnecte.value ||
+        !utilisateurConnecte.value.id ||
+        !localStorage.getItem('authToken')
+      ) {
+        console.warn(
+          'Impossible de charger les dépenses : utilisateur non connecté ou token manquant.',
+        )
+        depenses.value = []
+        return
       }
-    }
 
-    const chargerDepenses = () => {
-      if (!utilisateurConnecte.value) return
+      const authToken = localStorage.getItem('authToken')
+      const utilisateurId = utilisateurConnecte.value.id
+
+      // Log pour le débogage
+      console.log(`Tentative de chargement des dépenses pour l'utilisateur ID: ${utilisateurId}`)
+      console.log(`Jeton d'authentification: ${authToken ? 'Présent' : 'Absent'}`)
+
       try {
-        const cle = `depenses_${utilisateurConnecte.value.email}`
-        const depensesSauvegardees = localStorage.getItem(cle)
-        if (depensesSauvegardees) {
-          depenses.value = JSON.parse(depensesSauvegardees)
-          console.log('📂 Dépenses chargées pour:', cle, depenses.value.length, 'dépenses')
+        const response = await fetch(
+          `http://localhost:8080/api/depenses/utilisateur/${utilisateurId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${authToken}`,
+            },
+          },
+        )
+
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`)
         }
+
+        const data = await response.json()
+        depenses.value = data
+        console.log(
+          "📂 Dépenses chargées pour l'utilisateur connecté:",
+          depenses.value.length,
+          'dépenses',
+        )
       } catch (erreur) {
-        console.warn('Impossible de charger les dépenses:', erreur)
+        console.warn('Impossible de charger les dépenses depuis le backend:', erreur)
+        depenses.value = []
       }
     }
 
     const chargerUtilisateurs = async () => {
-      const authToken =
-        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ5b2FubnRlc3RAZXhhbXBsZS5jb20iLCJpYXQiOjE3NTU0NjYxNzcsImV4cCI6MTc1NjA3MDk3N30.NwZo8-MiBYnfD6j7UI-uvElw6yPxUvUoB7LQmIqP5Qot5ORyaRL_-Yzj9cAAa_VNMUPUprl1I28RJ5TOlB2d2A'
+      const authToken = localStorage.getItem('authToken')
+      if (!authToken) {
+        console.warn("Jeton d'authentification non trouvé. Impossible de charger les utilisateurs.")
+        return
+      }
       try {
         const response = await fetch('http://localhost:8080/api/utilisateurs', {
           method: 'GET',
@@ -261,9 +398,17 @@ export default {
         const userData = localStorage.getItem('userData')
         if (userData && userData !== 'undefined') {
           const parsedUser = JSON.parse(userData)
-          utilisateurConnecte.value = parsedUser
-          console.log('👤 Utilisateur déjà connecté:', utilisateurConnecte.value.email)
-          chargerDepenses()
+          if (parsedUser && parsedUser.id) {
+            utilisateurConnecte.value = parsedUser
+            console.log(
+              '👤 Utilisateur déjà connecté:',
+              utilisateurConnecte.value.email || utilisateurConnecte.value.nom,
+            )
+            await chargerDepenses()
+          } else {
+            console.warn('Données utilisateur dans le localStorage non valides.')
+            seDeconnecter()
+          }
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de l'authentification:", error)
@@ -275,7 +420,7 @@ export default {
 
     // Surveillance des changements de l'utilisateur pour sauvegarder/charger les dépenses
     watch(utilisateurConnecte, (nouveau, ancien) => {
-      if (nouveau && !ancien) {
+      if (nouveau && !ancien && nouveau.id) {
         chargerDepenses()
       } else if (!nouveau && ancien) {
         depenses.value = []
