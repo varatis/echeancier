@@ -142,7 +142,7 @@ export default {
 
       try {
         const endpoint = estConnexion.value ? 'connexion' : 'inscription'
-        const url = `http://localhost:8080/api/utilisateurs/${endpoint}`
+        const url = `https://echeancier-backend-6.onrender.com/api/utilisateurs/${endpoint}`
 
         const response = await fetch(url, {
           method: 'POST',

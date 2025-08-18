@@ -197,7 +197,7 @@ export default {
       return depensesUtilisateurConnecte - moyenneParPersonne
     })
 
-    const API_URL = 'http://localhost:8080/api'
+    const API_URL = 'https://echeancier-backend-6.onrender.com/api'
 
     // Méthodes
     const ajouterDepense = async (nouvelleDepense) => {
@@ -262,12 +262,15 @@ export default {
       const authToken = localStorage.getItem('authToken')
 
       try {
-        const response = await fetch(`http://localhost:8080/api/depenses/${id}`, {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${authToken}`,
+        const response = await fetch(
+          `https://echeancier-backend-6.onrender.com/api/depenses/${id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
           },
-        })
+        )
 
         if (!response.ok) {
           throw new Error(`Erreur HTTP: ${response.status}`)
@@ -312,7 +315,7 @@ export default {
       try {
         // CHANGEMENT : Appel à l'endpoint pour toutes les dépenses au lieu d'un utilisateur spécifique
         const response = await fetch(
-          `http://localhost:8080/api/depenses`, // Suppression de /utilisateur/${utilisateurId}
+          `https://echeancier-backend-6.onrender.com/api/depenses`, // Suppression de /utilisateur/${utilisateurId}
           {
             method: 'GET',
             headers: {
@@ -339,7 +342,7 @@ export default {
         return
       }
       try {
-        const response = await fetch('http://localhost:8080/api/utilisateurs', {
+        const response = await fetch('https://echeancier-backend-6.onrender.com/api/utilisateurs', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
