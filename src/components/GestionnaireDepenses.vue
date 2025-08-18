@@ -108,7 +108,7 @@
           :utilisateurs="utilisateurs"
           @ajouter-depense="ajouterDepense"
           @annuler="basculerFormulaire"
-        />-
+        />
 
         <!-- Statistiques par utilisateur -->
         <StatistiquesUtilisateurs :utilisateurs="utilisateurs" :depenses="depenses" />

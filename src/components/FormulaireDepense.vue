@@ -1,7 +1,25 @@
 <template>
   <transition name="glissement-bas">
     <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h3 class="text-lg font-semibold mb-4 text-gray-800">Nouvelle dépense</h3>
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold text-gray-800">Nouvelle dépense</h3>
+        <!-- Bouton X pour fermer -->
+        <button
+          @click="annuler"
+          type="button"
+          class="text-gray-400 hover:text-gray-600 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 rounded-full p-1"
+          aria-label="Fermer le formulaire"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            ></path>
+          </svg>
+        </button>
+      </div>
 
       <form @submit.prevent="gererSoumission" class="space-y-4">
         <div>
@@ -65,23 +83,23 @@
           />
         </div>
 
-        <div class="flex gap-4">
+        <div class="flex gap-3 pt-2">
+          <button
+            type="button"
+            @click="annuler"
+            class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Annuler
+          </button>
           <button
             type="submit"
             :disabled="!formulaireValide"
-            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="flex-1 px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             Ajouter la dépense
           </button>
         </div>
       </form>
-
-      <!-- Debug : Affichage des valeurs du formulaire -->
-      <div class="mt-4 p-4 bg-gray-100 rounded text-sm">
-        <h4>Debug - Valeurs du formulaire :</h4>
-        <pre>{{ JSON.stringify(formulaire, null, 2) }}</pre>
-        <p><strong>Formulaire valide :</strong> {{ formulaireValide }}</p>
-      </div>
     </div>
   </transition>
 </template>
@@ -149,10 +167,16 @@ export default {
       reinitialiserFormulaire()
     }
 
+    const annuler = () => {
+      reinitialiserFormulaire()
+      emit('annuler')
+    }
+
     return {
       formulaire,
       formulaireValide,
       gererSoumission,
+      annuler,
     }
   },
 }
