@@ -39,13 +39,10 @@
                   obtenirNomUtilisateur(depense.utilisateurId)
                 }}</span>
                 <span class="ml-2 text-xs text-gray-400">
-                  {{ formaterDate(depense.date) }}
+                  {{ formaterDate(depense.dateDepense) }}
                 </span>
               </div>
               <h4 class="font-semibold text-gray-800 mb-1">{{ depense.description }}</h4>
-              <p class="text-xs text-gray-500">
-                {{ formaterDateHeure(depense.horodatage) }}
-              </p>
             </div>
             <div class="text-right ml-4">
               <div class="text-lg font-bold text-gray-900 mb-1">
