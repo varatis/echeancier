@@ -309,12 +309,10 @@ export default {
     }
 
     // Fonctions de persistance
+    // Remplacez la fonction chargerDepenses par cette version :
+
     const chargerDepenses = async () => {
-      if (
-        !utilisateurConnecte.value ||
-        !utilisateurConnecte.value.id ||
-        !localStorage.getItem('authToken')
-      ) {
+      if (!utilisateurConnecte.value || !localStorage.getItem('authToken')) {
         console.warn(
           'Impossible de charger les dépenses : utilisateur non connecté ou token manquant.',
         )
@@ -323,15 +321,11 @@ export default {
       }
 
       const authToken = localStorage.getItem('authToken')
-      const utilisateurId = utilisateurConnecte.value.id
-
-      // Log pour le débogage
-      console.log(`Tentative de chargement des dépenses pour l'utilisateur ID: ${utilisateurId}`)
-      console.log(`Jeton d'authentification: ${authToken ? 'Présent' : 'Absent'}`)
 
       try {
+        // CHANGEMENT : Appel à l'endpoint pour toutes les dépenses au lieu d'un utilisateur spécifique
         const response = await fetch(
-          `http://localhost:8080/api/depenses/utilisateur/${utilisateurId}`,
+          `http://localhost:8080/api/depenses`, // Suppression de /utilisateur/${utilisateurId}
           {
             method: 'GET',
             headers: {
@@ -347,11 +341,7 @@ export default {
 
         const data = await response.json()
         depenses.value = data
-        console.log(
-          "📂 Dépenses chargées pour l'utilisateur connecté:",
-          depenses.value.length,
-          'dépenses',
-        )
+        console.log('📂 Toutes les dépenses chargées:', depenses.value.length, 'dépenses')
       } catch (erreur) {
         console.warn('Impossible de charger les dépenses depuis le backend:', erreur)
         depenses.value = []
