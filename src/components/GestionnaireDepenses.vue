@@ -18,18 +18,6 @@
           <div class="flex items-center gap-2">
             <h1 class="text-xl font-bold text-gray-900">💰 Comptes Partagés</h1>
             <!-- Indicateur d'environnement -->
-            <span
-              v-if="isLocalMode()"
-              class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full"
-            >
-              LOCAL
-            </span>
-            <span
-              v-else-if="API_CONFIG.APP_ENV === 'development'"
-              class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
-            >
-              DEV
-            </span>
           </div>
 
           <div v-if="utilisateurConnecte" class="flex items-center gap-2">
