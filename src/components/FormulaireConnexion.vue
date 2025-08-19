@@ -42,12 +42,17 @@
     >
       {{ message }}
     </p>
+
+    <!-- Indicateur d'environnement -->
+    <div class="mt-4 text-center text-xs text-gray-400">
+      Environnement: {{ API_CONFIG.APP_ENV }} | API: {{ API_CONFIG.BASE_URL }}
+    </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue'
-import axios from 'axios'
+import { API_CONFIG, apiService } from '../api'
 
 // Define the events that will be emitted
 const emit = defineEmits(['connexion-reussie'])
@@ -64,12 +69,9 @@ const gererConnexion = async () => {
   chargement.value = true
   message.value = ''
   try {
-    const reponse = await axios.post(
-      'https://echeancier-backend-6.onrender.com/api/utilisateurs/connexion',
-      credentials,
-    )
-    const token = reponse.data.token
-    const user = reponse.data.user
+    const response = await apiService.auth.login(credentials)
+    const token = response.data.token
+    const user = response.data.user
 
     // Stocker les données dans localStorage
     localStorage.setItem('authToken', token)

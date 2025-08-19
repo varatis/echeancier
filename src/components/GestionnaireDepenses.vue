@@ -15,7 +15,22 @@
       <!-- Header -->
       <div class="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div class="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 class="text-xl font-bold text-gray-900">💰 Comptes Partagés</h1>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-gray-900">💰 Comptes Partagés</h1>
+            <!-- Indicateur d'environnement -->
+            <span
+              v-if="isLocalMode()"
+              class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full"
+            >
+              LOCAL
+            </span>
+            <span
+              v-else-if="API_CONFIG.APP_ENV === 'development'"
+              class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full"
+            >
+              DEV
+            </span>
+          </div>
 
           <div v-if="utilisateurConnecte" class="flex items-center gap-2">
             <span class="text-sm text-gray-600">{{
@@ -138,6 +153,7 @@ import CarteSoldeEquilibre from './CarteSoldeEquilibre.vue'
 import FormulaireDepense from './FormulaireDepense.vue'
 import StatistiquesUtilisateurs from './StatistiquesUtilisateurs.vue'
 import ModalAuthentification from './ModalAuthentification.vue'
+import { API_CONFIG, apiService, isLocalMode } from '../api'
 
 export default {
   name: 'GestionnaireDepenses',
@@ -197,13 +213,10 @@ export default {
       return depensesUtilisateurConnecte - moyenneParPersonne
     })
 
-    const API_URL = 'https://echeancier-backend-6.onrender.com/api'
-
     // Méthodes
     const ajouterDepense = async (nouvelleDepense) => {
       try {
         // Validation côté client
-
         if (!nouvelleDepense.dateDepense) {
           throw new Error('La date est obligatoire')
         }
@@ -215,38 +228,17 @@ export default {
           dateDepense: nouvelleDepense.dateDepense,
         }
 
-        const url = `${API_URL}/depenses/utilisateur/${nouvelleDepense.utilisateurId}`
-
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify(donneesAPI),
-        })
-
-        if (!response.ok) {
-          const errorText = await response.text()
-
-          try {
-            const errorJson = JSON.parse(errorText)
-            throw new Error(errorJson.erreur || `Erreur HTTP: ${response.status}`)
-          } catch (parseError) {
-            throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`)
-          }
-        }
-
-        const data = await response.json()
+        // Utilisation du service API
+        await apiService.expenses.create(nouvelleDepense.utilisateurId, donneesAPI)
 
         // Rafraîchir la liste des dépenses
         await chargerDepenses()
         afficherFormulaire.value = false
       } catch (error) {
         // Afficher l'erreur à l'utilisateur
-        // (ajustez selon votre système de notification)
-        alert(`Erreur lors de l'ajout de la dépense: ${error.message}`)
+        const errorMessage =
+          error.response?.data?.erreur || error.message || "Erreur lors de l'ajout de la dépense"
+        alert(`Erreur lors de l'ajout de la dépense: ${errorMessage}`)
       }
     }
 
@@ -259,26 +251,15 @@ export default {
         return
       }
 
-      const authToken = localStorage.getItem('authToken')
-
       try {
-        const response = await fetch(
-          `https://echeancier-backend-6.onrender.com/api/depenses/${id}`,
-          {
-            method: 'DELETE',
-            headers: {
-              Authorization: `Bearer ${authToken}`,
-            },
-          },
-        )
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
-        }
-
+        await apiService.expenses.delete(id)
         // Actualiser la liste des dépenses après la suppression
         await chargerDepenses()
-      } catch (error) {}
+      } catch (error) {
+        console.error('Erreur lors de la suppression:', error)
+        const errorMessage = error.response?.data?.message || 'Erreur lors de la suppression'
+        alert(errorMessage)
+      }
     }
 
     const basculerFormulaire = () => {
@@ -302,36 +283,17 @@ export default {
     }
 
     // Fonctions de persistance
-    // Remplacez la fonction chargerDepenses par cette version :
-
     const chargerDepenses = async () => {
       if (!utilisateurConnecte.value || !localStorage.getItem('authToken')) {
         depenses.value = []
         return
       }
 
-      const authToken = localStorage.getItem('authToken')
-
       try {
-        // CHANGEMENT : Appel à l'endpoint pour toutes les dépenses au lieu d'un utilisateur spécifique
-        const response = await fetch(
-          `https://echeancier-backend-6.onrender.com/api/depenses`, // Suppression de /utilisateur/${utilisateurId}
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${authToken}`,
-            },
-          },
-        )
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
-        }
-
-        const data = await response.json()
-        depenses.value = data
+        const response = await apiService.expenses.getAll()
+        depenses.value = response.data
       } catch (erreur) {
+        console.error('Erreur lors du chargement des dépenses:', erreur)
         depenses.value = []
       }
     }
@@ -341,27 +303,18 @@ export default {
       if (!authToken) {
         return
       }
+
       try {
-        const response = await fetch('https://echeancier-backend-6.onrender.com/api/utilisateurs', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${authToken}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP: ${response.status}`)
-        }
-
-        const data = await response.json()
-        utilisateurs.value = data.map((user) => ({
+        const response = await apiService.users.getAll()
+        utilisateurs.value = response.data.map((user) => ({
           id: user.id,
           nom: user.nomUtilisateur,
           email: user.email,
           couleur: 'bg-gray-500', // Couleur par défaut
         }))
-      } catch (error) {}
+      } catch (error) {
+        console.error('Erreur lors du chargement des utilisateurs:', error)
+      }
     }
 
     // Initialisation
@@ -407,6 +360,9 @@ export default {
       basculerFormulaire,
       gererConnexionReussie,
       seDeconnecter,
+      // Exposer les fonctions de configuration
+      API_CONFIG,
+      isLocalMode,
     }
   },
 }

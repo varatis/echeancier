@@ -58,7 +58,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import api from '@/services/api'
+import api from '@/api.js'
 
 const credentials = ref({
   nomUtilisateur: '',

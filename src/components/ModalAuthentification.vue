@@ -71,7 +71,7 @@
           <button
             type="submit"
             :disabled="chargementAuth"
-            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-200"
+            class="w-full px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors duration-200 disabled:bg-gray-400"
           >
             <span v-if="!chargementAuth">{{ estConnexion ? 'Se connecter' : "S'inscrire" }}</span>
             <span v-else>
@@ -107,6 +107,11 @@
             }}
           </button>
         </p>
+
+        <!-- Indicateur d'environnement en bas de la modale -->
+        <div class="mt-4 text-center text-xs text-gray-400">
+          Environnement: {{ API_CONFIG.APP_ENV }} | API: {{ isLocalMode() ? 'Local' : 'Distant' }}
+        </div>
       </div>
     </div>
   </transition>
@@ -114,6 +119,7 @@
 
 <script>
 import { ref } from 'vue'
+import { API_CONFIG, apiService, isLocalMode } from '../api'
 
 export default {
   name: 'ModalAuthentification',
@@ -141,30 +147,33 @@ export default {
       erreur.value = ''
 
       try {
-        const endpoint = estConnexion.value ? 'connexion' : 'inscription'
-        const url = `https://echeancier-backend-6.onrender.com/api/utilisateurs/${endpoint}`
+        let response
 
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        if (estConnexion.value) {
+          // Connexion
+          response = await apiService.auth.login({
+            email: formulaire.value.email,
+            motDePasse: formulaire.value.motDePasse,
+          })
+        } else {
+          // Inscription
+          response = await apiService.auth.register({
             nomUtilisateur: formulaire.value.nomUtilisateur,
             email: formulaire.value.email,
             motDePasse: formulaire.value.motDePasse,
-          }),
-        })
+          })
+        }
 
-        const data = await response.json()
+        const data = response.data
 
-        if (response.ok) {
+        if (data && data.user && data.token) {
           const utilisateurConnecte = {
             id: data.user.id,
             nom: data.user.nomUtilisateur,
             email: data.user.email,
             token: data.token,
           }
+
           localStorage.setItem('userData', JSON.stringify(utilisateurConnecte))
           localStorage.setItem('authToken', data.token)
 
@@ -178,10 +187,12 @@ export default {
             motDePasse: '',
           }
         } else {
-          throw new Error(data.message || "Échec de l'authentification")
+          throw new Error('Réponse invalide du serveur')
         }
-      } catch (e) {
-        erreur.value = e.message
+      } catch (error) {
+        console.error("Erreur d'authentification:", error)
+        erreur.value =
+          error.response?.data?.message || error.message || "Échec de l'authentification"
       } finally {
         chargementAuth.value = false
       }
@@ -194,6 +205,8 @@ export default {
       erreur,
       basculerVue,
       gererAuthentification,
+      API_CONFIG,
+      isLocalMode,
     }
   },
 }
